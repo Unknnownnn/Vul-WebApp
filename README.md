@@ -314,4 +314,4 @@ A flag is revealed to the user in the documentation page of the webpage as the D
 ### Discussions Tab
 <img src="./imagedata/Picture45.png"> 
 
-Taking the first letter of every comment from 2nd to 3rd last gives CYSM, our flag format. The 2nd last comment give us the full flag CYSM{dafweyif29ybvf23d}
+Taking the first letter of every comment from 2nd to 3rd last gives CYSM, our flag format. The 2nd last comment give us the full flag `CYSM{dafweyif29ybvf23d}`
