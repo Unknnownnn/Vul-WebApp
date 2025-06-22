@@ -24,6 +24,8 @@ The application will be available at `http://localhost:5000`
 
 # CYSCOM JUICE SHOP WALKTHROUGH
 
+<img src="./imagedata/logo.png"> 
+
 The CYSCOM JUICE SHOP, like OSWAP Juice Shop,includes a broad spectrum of vulnerabilities from simple input-based flaws to logic and design-level flaws. Understanding the rationale behind each exploit reinforces the importance of layered security, input validation, and robust authentication design.
 This document provides a detailed analysis of each challenge presented in the CYSCOM Juice Shop Challenge. Each vulnerability is explained alongside its exploitation method and the flag retrieval steps.
 
