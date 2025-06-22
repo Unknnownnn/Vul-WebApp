@@ -22,32 +22,38 @@ The application will be available at `http://localhost:5000`
 
 
 
-## Intentional Vulnerabilities
+# CYSCOM JUICE SHOP WALKTHROUGH
 
-1. **SQL Injection**
+The CYSCOM JUICE SHOP, like OSWAP Juice Shop,includes a broad spectrum of vulnerabilities from simple input-based flaws to logic and design-level flaws. Understanding the rationale behind each exploit reinforces the importance of layered security, input validation, and robust authentication design.
+This document provides a detailed analysis of each challenge presented in the CYSCOM Juice Shop Challenge. Each vulnerability is explained alongside its exploitation method and the flag retrieval steps.
 
-2. **Cross-Site Scripting (XSS)**
+## TASK 1: MAIN FLAGS
 
-3. **Session Token Vulnerabilities**
+### Initial Login Page & SQL Injection
+<img src="./imagedata/Picture1.png"  width=600 height=300> 
+The login form is susceptible to SQL Injection, allowing attackers to bypass authentication without knowing valid credentials. This is due to improperly sanitized user inputs in SQL queries.
 
-4. **Admin Panel Vulnerabilities**
+Examples of payloads:
+```
+admin' –
+admin';--
+admin' /*
+' UNION SELECT 1,2,3,1,'admin
+```
 
-5. **IDOR**
+Entering these in the username followed by any password lets the user login as admin.
 
-6. **Weak Authentication**
+> [!NOTE]
+> OR-based injections are filtered, requiring alternative payloads.
 
-7. **Command Injection**
 
-8. **Privilege Escalation Challenge**
+### Admin Panel Disclosure
 
-9. **Hidden info**
+The /admin endpoint, typically hidden, becomes accessible post-SQL injection login. This panel leaks usernames and passwords of all registered users, indicating a Sensitive Data Exposure vulnerability.
 
-10. **Fake Pages**
+<img src="./misc/autotab.png"  width=600 height=300> 
 
-11. **Server-Side Template Injection vulnerability**
+Flag Retrieval: Visiting this hidden endpoint grant the user a flag. 
 
-12. **Broken Authentication**
 
-13. **Prototype Pollution**
- 
-14. **Type Juggling**
+The leaked credentials can be used to authenticate normally to ‘admin’ user and retrieve the corresponding flag. 
