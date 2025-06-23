@@ -1094,6 +1094,9 @@ def view_note(note_id):
 
 @app.route('/reset_password', methods=['POST'])
 def reset_password():
+    max_retries = 3
+    retry_count = 0
+    
     try:
         data = request.get_json() if request.is_json else request.form
         username = data.get('username')
@@ -1104,32 +1107,75 @@ def reset_password():
         if username not in ['user', 'cabinet']:
             return jsonify({'status': 'error', 'message': 'Password reset not available for this account'})
         
-        # Rest of the function remains the same
+        # Validate token
         current_date = time.strftime('%d')
         expected_token = base64.b64encode(f"{username}:{current_date}".encode()).decode()
         
-        if reset_token == expected_token:
+        if reset_token != expected_token:
+            return jsonify({'status': 'error', 'message': 'Invalid reset token'})
+            
+        # Try to update password with retries
+        while retry_count < max_retries:
             try:
-                conn = get_db()
-                c = conn.cursor()
-                c.execute("UPDATE users SET password = ? WHERE username = ?", 
-                         (new_password, username))
-                conn.commit()
+                # Use the shared database for password resets
+                db_path = SHARED_BOT_DB
+                if not os.path.exists(db_path):
+                    init_user_db(db_path, 'shared_automated')
                 
-                c.execute("INSERT INTO solved_challenges (username, challenge_name) VALUES (?, ?)",
-                         (username, 'broken_auth'))
-                conn.commit()
-                conn.close()
+                conn = sqlite3.connect(db_path)
                 
-                return jsonify({
-                    'status': 'success', 
-                    'message': f'Password updated successfully! You found the authentication vulnerability! Flag: {FLAGS["broken_auth"]}'
-                })
+                # Use a transaction for atomicity
+                with conn:
+                    c = conn.cursor()
+                    # Update the password without session_id requirement
+                    c.execute("""
+                        UPDATE users 
+                        SET password = ? 
+                        WHERE username = ?
+                    """, (new_password, username))
+                    
+                    if c.rowcount == 0:
+                        return jsonify({
+                            'status': 'error',
+                            'message': 'User not found in database'
+                        })
+                    
+                    # Mark challenge as solved
+                    if mark_challenge_solved(username, 'broken_auth'):
+                        return jsonify({
+                            'status': 'success', 
+                            'message': f'Password updated successfully! You found the authentication vulnerability! Flag: {FLAGS["broken_auth"]}'
+                        })
+                    
+                    return jsonify({
+                        'status': 'success', 
+                        'message': 'Password updated successfully!'
+                    })
+                    
+            except sqlite3.OperationalError as e:
+                if "database is locked" in str(e):
+                    retry_count += 1
+                    time.sleep(0.1 * retry_count)  # Exponential backoff
+                    continue
+                raise
             except Exception as e:
+                print(f"Reset password error: {str(e)}")
                 return jsonify({'status': 'error', 'message': str(e)})
+            finally:
+                if 'conn' in locals():
+                    try:
+                        conn.close()
+                    except:
+                        pass
+                        
+        # If we get here, we've exceeded our retries
+        return jsonify({
+            'status': 'error',
+            'message': 'Database is currently busy. Please try again.'
+        })
         
-        return jsonify({'status': 'error', 'message': 'Invalid reset token'})
     except Exception as e:
+        print(f"Reset password error: {str(e)}")
         return jsonify({'status': 'error', 'message': str(e)})
 
 @app.route('/clear_notes')
