@@ -1142,16 +1142,14 @@ def reset_password():
                             VALUES (?, ?, 0, 'shared')
                         """, (username, new_password))
                     
-                    # Mark challenge as solved
+                    # Mark challenge as solved and get the flag
+                    flag_message = ''
                     if mark_challenge_solved(username, 'broken_auth'):
-                        return jsonify({
-                            'status': 'success', 
-                            'message': f'Password updated successfully! You found the authentication vulnerability! Flag: {FLAGS["broken_auth"]}'
-                        })
+                        flag_message = f' You found the authentication vulnerability! Flag: {FLAGS["broken_auth"]}'
                     
                     return jsonify({
                         'status': 'success', 
-                        'message': 'Password updated successfully!'
+                        'message': 'Password updated successfully!' + flag_message
                     })
                     
             except sqlite3.OperationalError as e:
