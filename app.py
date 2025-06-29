@@ -1135,10 +1135,12 @@ def reset_password():
                     """, (new_password, username))
                     
                     if c.rowcount == 0:
-                        return jsonify({
-                            'status': 'error',
-                            'message': 'User not found in database'
-                        })
+                        # If no rows were updated, the user doesn't exist in this database
+                        # Insert the user
+                        c.execute("""
+                            INSERT INTO users (username, password, is_admin, session_id)
+                            VALUES (?, ?, 0, 'shared')
+                        """, (username, new_password))
                     
                     # Mark challenge as solved
                     if mark_challenge_solved(username, 'broken_auth'):
@@ -1149,7 +1151,7 @@ def reset_password():
                     
                     return jsonify({
                         'status': 'success', 
-                        'message': f'Password updated successfully! You found the authentication vulnerability! Flag: {FLAGS["broken_auth"]}'
+                        'message': 'Password updated successfully!'
                     })
                     
             except sqlite3.OperationalError as e:
