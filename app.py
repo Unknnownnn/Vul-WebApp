@@ -1149,7 +1149,7 @@ def reset_password():
                     
                     return jsonify({
                         'status': 'success', 
-                        'message': 'Password updated successfully!'
+                        'message': f'Password updated successfully! You found the authentication vulnerability! Flag: {FLAGS["broken_auth"]}'
                     })
                     
             except sqlite3.OperationalError as e:
