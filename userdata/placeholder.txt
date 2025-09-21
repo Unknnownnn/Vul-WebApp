@@ -1,0 +1,5 @@
+This directory should contain the following files:
+- 88382n2nbd92.png
+- internalmeet28-03-2025.wav
+
+Please add these files before building the Docker image. 
