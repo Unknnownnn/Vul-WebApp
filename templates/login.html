@@ -196,7 +196,7 @@
             <form id="resetForm" onsubmit="resetPassword(event)">
                 <div class="form-group">
                     <label for="reset_username">Username</label>
-                    <input type="text" id="reset_username" name="username" placeholder="user or cabinet" required>
+                    <input type="text" id="reset_username" name="username" placeholder="Existing Username" required>
                 </div>
                 <div class="form-group">
                     <label for="reset_password">New Password</label>
@@ -208,17 +208,9 @@
                 </div>
                 <button type="submit" class="submit-btn">Reset Password</button>
             </form>
-            <div style="background: #f3f4f6; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem;">
-                <p style="color: #374151; font-size: 0.875rem; margin-bottom: 0.5rem;">
-                    <strong>Reset Token Format:</strong> Base64 encoded string of "username:day_of_month"
-                </p>
-                <p style="color: #6b7280; font-size: 0.75rem;">
-                    Example: For user "user" on day 21 → encode "user:21" → dXNlcjoyMQ==
-                </p>
-                <button onclick="generateToken()" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem; background: #6b7280; color: white; border: none; border-radius: 0.25rem; font-size: 0.75rem; cursor: pointer;">
-                    Generate Token for Today
-                </button>
-            </div>
+            <p style="color: #6b7280; font-size: 0.875rem; margin-top: 10px;">
+                Contact support to get your reset token.
+            </p>
         </div>
         <script>
             function toggleForgotPassword() {
@@ -226,15 +218,15 @@
                 form.style.display = form.style.display === 'none' ? 'block' : 'none';
             }
             
-            function generateToken() {
-                const username = document.getElementById('reset_username').value || 'user';
-                const currentDay = new Date().getDate().toString();
-                const tokenString = `${username}:${currentDay}`;
-                const token = btoa(tokenString);
+            // function generateToken() {
+            //     const username = document.getElementById('reset_username').value || 'user';
+            //     const currentDay = new Date().getDate().toString();
+            //     const tokenString = `${username}:${currentDay}`;
+            //     const token = btoa(tokenString);
                 
-                document.getElementById('reset_token').value = token;
-                alert(`Generated token for ${username} on day ${currentDay}: ${token}`);
-            }
+            //     document.getElementById('reset_token').value = token;
+            //     alert(`Generated token for ${username} on day ${currentDay}: ${token}`);
+            // }
             
             function resetPassword(event) {
                 event.preventDefault();
