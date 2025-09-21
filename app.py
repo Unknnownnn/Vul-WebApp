@@ -1114,38 +1114,51 @@ def reset_password():
         if reset_token != expected_token:
             return jsonify({'status': 'error', 'message': 'Invalid reset token'})
             
+        # Always award the flag when valid token is used, regardless of database
+        flag_message = f' You found the authentication vulnerability! Flag: {FLAGS["broken_auth"]}'
+        
         # Try to update password with retries
         while retry_count < max_retries:
             try:
-                # Use the shared database for password resets
-                db_path = SHARED_BOT_DB
-                if not os.path.exists(db_path):
-                    init_user_db(db_path, 'shared_automated')
+                # Determine which database to use based on session context
+                if is_likely_bot() or not session.get('session_id'):
+                    # Use shared database for bots/automated tools
+                    db_path = SHARED_BOT_DB
+                    session_id = 'shared_automated'
+                    if not os.path.exists(db_path):
+                        init_user_db(db_path, session_id)
+                else:
+                    # Use user's session database for regular users
+                    db_path = get_user_db_path()
+                    session_id = session.get('session_id')
                 
-                conn = sqlite3.connect(db_path)
+                conn = sqlite3.connect(db_path, timeout=30.0)
                 
                 # Use a transaction for atomicity
                 with conn:
                     c = conn.cursor()
-                    # Update the password without session_id requirement
+                    # Update the password
                     c.execute("""
                         UPDATE users 
                         SET password = ? 
-                        WHERE username = ?
-                    """, (new_password, username))
+                        WHERE username = ? AND session_id = ?
+                    """, (new_password, username, session_id))
                     
                     if c.rowcount == 0:
-                        # If no rows were updated, the user doesn't exist in this database
-                        # Insert the user
+                        # If no rows were updated, insert the user
                         c.execute("""
                             INSERT INTO users (username, password, is_admin, session_id)
-                            VALUES (?, ?, 0, 'shared')
-                        """, (username, new_password))
+                            VALUES (?, ?, 0, ?)
+                        """, (username, new_password, session_id))
                     
-                    # Mark challenge as solved and get the flag
-                    flag_message = ''
-                    if mark_challenge_solved(username, 'broken_auth'):
-                        flag_message = f' You found the authentication vulnerability! Flag: {FLAGS["broken_auth"]}'
+                    # Mark challenge as solved in the same database
+                    c.execute("""
+                        INSERT OR REPLACE INTO solved_challenges 
+                        (username, challenge_name, session_id) 
+                        VALUES (?, ?, ?)
+                    """, (username, 'broken_auth', session_id))
+                    
+                    conn.commit()
                     
                     return jsonify({
                         'status': 'success', 
